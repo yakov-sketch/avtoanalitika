@@ -59,7 +59,11 @@ from .federal_districts import ALL_DISTRICTS  # noqa: E402  (avoids circular at 
 
 
 def _agg_query(where_sql: str = "", params: tuple = ()) -> str:
-    region_agg = _AGG.format(col="region2")
+    # All aggregates computed in a single GROUP BY pass — no correlated
+    # subquery (the old per-group region subquery made this O(groups²)).
+    region_agg = _AGG.format(
+        col="CASE WHEN status='active' AND region IS NOT NULL THEN region END"
+    )
     platforms_agg = _AGG.format(col="platform")
     sections_agg = _AGG.format(col="section")
     return f"""
@@ -71,13 +75,7 @@ def _agg_query(where_sql: str = "", params: tuple = ()) -> str:
             MIN(CASE WHEN status='active' AND price_rub > 0 THEN price_rub END) AS min_price,
             MAX(CASE WHEN status='active' AND price_rub > 0 THEN price_rub END) AS max_price,
             COUNT(DISTINCT CASE WHEN status='active' THEN seller_id END) AS sellers_count,
-            (SELECT {region_agg} FROM (
-                SELECT DISTINCT L2.region AS region2 FROM listings L2
-                WHERE L2.mark=listings.mark AND L2.model=listings.model
-                  AND COALESCE(L2.generation,'')=COALESCE(listings.generation,'')
-                  AND COALESCE(L2.configuration,'')=COALESCE(listings.configuration,'')
-                  AND L2.status='active' AND L2.region IS NOT NULL
-            ) sub) AS regions_present_csv,
+            {region_agg} AS regions_present_csv,
             {platforms_agg} AS platforms_csv,
             {sections_agg} AS sections_csv,
             MIN(year) AS min_year,
@@ -240,8 +238,8 @@ def get_regions_summary() -> list[dict[str, Any]]:
                 SELECT mark, model, generation, configuration, COUNT(*) AS n FROM listings
                 WHERE region=? AND status='active'
                 GROUP BY mark, model, generation, configuration
-                HAVING n <= 2
-                ORDER BY n ASC LIMIT 5
+                HAVING COUNT(*) <= 2
+                ORDER BY COUNT(*) ASC LIMIT 5
                 """,
                 (r["id"],),
             ).fetchall()
