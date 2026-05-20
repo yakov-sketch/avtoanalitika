@@ -2,17 +2,39 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
 
 export type ScoreComponent = { label: string; value: number; explain: string };
 export type Score = {
+  key: string;
   name: string;
   value: number;
+  grade: string;
+  color: 'green' | 'yellow' | 'slate' | 'gray';
+  available: boolean;
   formula: string;
   components: ScoreComponent[];
   interpretation: string;
 };
+export type OpportunityType = {
+  key: string;
+  title: string;
+  description: string;
+};
 export type ScoresBundle = {
   deficit: Score;
   liquidity: Score;
+  turnover: Score;
+  capacity: Score;
+  priceSpread: Score;
+  arbitrage: Score;
+  velocity: Score;
+  trend: Score;
   demand: Score;
-  prospect: Score;
+  attractiveness: Score;
+  opportunity: OpportunityType;
+};
+
+export type MetricDefinition = { key: string; title: string; short: string; full: string };
+export type GlossaryResponse = {
+  metrics: MetricDefinition[];
+  opportunityTypes: OpportunityType[];
 };
 
 export type CarGroup = {
@@ -154,7 +176,7 @@ export type SearchFilters = {
   listingsTo?: number;
   rareOnly?: boolean;
   premiumOnly?: boolean;
-  sort?: 'prospect' | 'deficit' | 'liquidity' | 'demand' | 'price_asc' | 'price_desc';
+  sort?: 'attractiveness' | 'deficit' | 'liquidity' | 'demand' | 'turnover' | 'price_asc' | 'price_desc';
 };
 
 export type SearchResponse = {
@@ -228,6 +250,7 @@ export const api = {
     }),
   universalSearch: (q: string) =>
     fetchJson<UniversalSearchResponse>(`/api/v1/search-everything?q=${encodeURIComponent(q)}`),
+  glossary: () => fetchJson<GlossaryResponse>('/api/v1/glossary'),
 };
 
 export function formatRubles(value: number | null | undefined): string {

@@ -6,7 +6,7 @@ import { BrandCombobox } from '@/components/brand-combobox';
 import { RareCarsTable } from '@/components/rare-cars-table';
 import type { CarGroup } from '@/lib/api';
 
-type SortKey = 'activeCount' | 'avgPrice' | 'deficit' | 'liquidity' | 'prospect';
+type SortKey = 'activeCount' | 'avgPrice' | 'deficit' | 'liquidity' | 'attractiveness';
 
 const RARE_THRESHOLD = 10;
 
@@ -184,7 +184,7 @@ export function AnalyticsSection({
             className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none transition focus:border-primary"
           >
             <option value="activeCount:desc">По активным ↓</option>
-            <option value="prospect:desc">По перспективности ↓</option>
+            <option value="attractiveness:desc">По привлекательности ↓</option>
             <option value="deficit:desc">По дефициту ↓</option>
             <option value="liquidity:desc">По ликвидности ↓</option>
             <option value="avgPrice:desc">По цене ↓</option>

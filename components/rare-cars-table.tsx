@@ -3,10 +3,22 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Crown, Search, X } from 'lucide-react';
-import { ScoreBadge } from '@/components/badges';
+import { ScoreBadge, OpportunityBadge } from '@/components/badges';
 import { formatRubles, type CarGroup } from '@/lib/api';
 
-type SortKey = 'mark' | 'activeCount' | 'removedCount' | 'sellersCount' | 'regionsCount' | 'avgPrice' | 'deficit' | 'liquidity' | 'prospect';
+type SortKey =
+  | 'mark' | 'generation' | 'activeCount' | 'removedCount' | 'sellersCount'
+  | 'avgPrice' | 'deficit' | 'liquidity' | 'attractiveness' | 'opportunity';
+
+// Ранг типа возможности — от лучшего (1) к худшему (6), для сортировки колонки.
+const OPPORTUNITY_RANK: Record<string, number> = {
+  mass_liquid: 1,
+  niche_deficit: 2,
+  arbitrage: 3,
+  moderate: 4,
+  illiquid: 5,
+  oversaturated: 6,
+};
 
 export function RareCarsTable({
   cars,
@@ -40,14 +52,15 @@ export function RareCarsTable({
     const getVal = (c: CarGroup): number | string => {
       switch (key) {
         case 'mark': return `${c.mark} ${c.model}`;
+        case 'generation': return [c.generation, c.configuration].filter(Boolean).join(' ');
         case 'activeCount': return c.activeCount;
         case 'removedCount': return c.removedCount;
         case 'sellersCount': return c.sellersCount;
-        case 'regionsCount': return c.regionsCount;
         case 'avgPrice': return c.avgPrice ?? 0;
         case 'deficit': return c.scores.deficit.value;
         case 'liquidity': return c.scores.liquidity.value;
-        case 'prospect': return c.scores.prospect.value;
+        case 'attractiveness': return c.scores.attractiveness.value;
+        case 'opportunity': return OPPORTUNITY_RANK[c.scores.opportunity.key] ?? 9;
       }
     };
     return filtered.slice().sort((a, b) => {
@@ -104,48 +117,50 @@ export function RareCarsTable({
         )}
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-[1200px] text-sm">
+        <table className="w-full min-w-[1040px] text-sm">
           <thead className="bg-slate-50 text-left text-muted">
             <tr>
               <ThSort label="Бренд / Модель" k="mark" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-              <th className="px-5 py-3 font-medium">Поколение / Конфигурация</th>
+              <ThSort label="Поколение / Конфигурация" k="generation" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
               <ThSort label="Активные" k="activeCount" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
               <ThSort label="Снятые" k="removedCount" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
               <ThSort label="Продавцов" k="sellersCount" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
-              <ThSort label="Регионов" k="regionsCount" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
               <ThSort label="Средняя цена" k="avgPrice" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
               <ThSort label="Дефицит" k="deficit" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
               <ThSort label="Ликвидность" k="liquidity" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-              <ThSort label="Перспективность" k="prospect" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+              <ThSort label="Привлекательность" k="attractiveness" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+              <ThSort label="Тип возможности" k="opportunity" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
             </tr>
           </thead>
           <tbody>
             {pageRows.map((car) => (
               <tr key={car.id} className="border-t border-border transition hover:bg-slate-50/80">
-                <td className="px-5 py-4">
+                <td className="px-4 py-3.5">
                   <Link href={`/model/${car.id}`} className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary">
                     {car.isPremium ? (
-                      <Crown className="h-3.5 w-3.5 text-accent" aria-label="премиум-бренд" />
+                      <Crown className="h-3.5 w-3.5 shrink-0 text-accent" aria-label="премиум-бренд" />
                     ) : null}
                     <span>{car.mark} {car.model}</span>
                   </Link>
                 </td>
-                <td className="px-5 py-4 text-muted truncate max-w-[260px]" title={[car.generation, car.configuration].filter(Boolean).join(' · ')}>
+                <td className="px-4 py-3.5 text-muted truncate max-w-[240px]" title={[car.generation, car.configuration].filter(Boolean).join(' · ')}>
                   {[car.generation, car.configuration].filter(Boolean).join(' · ') || '—'}
                 </td>
-                <td className="px-5 py-4 text-right font-mono">{car.activeCount}</td>
-                <td className="px-5 py-4 text-right font-mono text-muted">{car.removedCount}</td>
-                <td className="px-5 py-4 text-right">{car.sellersCount}</td>
-                <td className="px-5 py-4 text-right">{car.regionsCount}</td>
-                <td className="px-5 py-4 text-right font-mono">{formatRubles(car.avgPrice)}</td>
-                <td className="px-5 py-4"><ScoreBadge value={car.scores.deficit.value} /></td>
-                <td className="px-5 py-4"><ScoreBadge value={car.scores.liquidity.value} /></td>
-                <td className="px-5 py-4"><ScoreBadge value={car.scores.prospect.value} /></td>
+                <td className="px-4 py-3.5 text-right font-mono">{car.activeCount}</td>
+                <td className="px-4 py-3.5 text-right font-mono text-muted">{car.removedCount}</td>
+                <td className="px-4 py-3.5 text-right">{car.sellersCount}</td>
+                <td className="px-4 py-3.5 text-right font-mono">{formatRubles(car.avgPrice)}</td>
+                <td className="px-4 py-3.5"><ScoreBadge score={car.scores.deficit} /></td>
+                <td className="px-4 py-3.5"><ScoreBadge score={car.scores.liquidity} /></td>
+                <td className="px-4 py-3.5"><ScoreBadge score={car.scores.attractiveness} /></td>
+                <td className="px-4 py-3.5">
+                  <OpportunityBadge titleKey={car.scores.opportunity.key} title={car.scores.opportunity.title} />
+                </td>
               </tr>
             ))}
             {pageRows.length === 0 ? (
               <tr>
-                <td className="px-5 py-8 text-center text-muted" colSpan={10}>
+                <td className="px-4 py-8 text-center text-muted" colSpan={10}>
                   Ничего не найдено.
                 </td>
               </tr>

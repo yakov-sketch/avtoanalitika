@@ -19,8 +19,8 @@ from .scoring import PREMIUM_BRANDS
 
 def overview() -> dict[str, Any]:
     groups = [g for g in get_groups() if g["active_count"] > 0]
-    # Top by prospect, then by active count desc as tiebreaker
-    preview = sorted(groups, key=lambda g: (-g["prospect_score"], -g["active_count"]))[:30]
+    # Top by attractiveness, then by active count desc as tiebreaker
+    preview = sorted(groups, key=lambda g: (-g["attractiveness_score"], -g["active_count"]))[:30]
     return {
         "totals": get_market_totals(),
         "platforms": get_platforms(),
@@ -99,7 +99,10 @@ def _sort(items: list[dict[str, Any]], key: str) -> list[dict[str, Any]]:
         return sorted(items, key=lambda g: -g["liquidity_score"])
     if key == "demand":
         return sorted(items, key=lambda g: -g["demand_score"])
-    return sorted(items, key=lambda g: (-g["prospect_score"], g["active_count"]))
+    if key == "turnover":
+        return sorted(items, key=lambda g: -g["turnover_score"])
+    # default — по привлекательности к завозу
+    return sorted(items, key=lambda g: (-g["attractiveness_score"], -g["active_count"]))
 
 
 def get_group_details(group_id: str) -> dict[str, Any] | None:

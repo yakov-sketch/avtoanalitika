@@ -14,10 +14,11 @@ type Props = {
 };
 
 const SORT_LABEL_TO_VALUE: Record<string, string> = {
-  'По перспективности': 'prospect',
+  'По привлекательности': 'attractiveness',
   'По дефициту': 'deficit',
   'По ликвидности': 'liquidity',
   'По спросу': 'demand',
+  'По обороту': 'turnover',
   'По цене (возрастание)': 'price_asc',
   'По цене (убывание)': 'price_desc',
 };
@@ -49,7 +50,7 @@ export function SearchPanel({
       listingsTo: '',
       rareOnly: false,
       premiumOnly: true,
-      sort: 'По перспективности',
+      sort: 'По привлекательности',
     }),
     [],
   );
@@ -90,7 +91,7 @@ export function SearchPanel({
     if (lt !== undefined) sp.set('listingsTo', String(lt));
     if (formState.rareOnly) sp.set('rareOnly', '1');
     if (!formState.premiumOnly) sp.set('premiumOnly', '0');
-    sp.set('sort', SORT_LABEL_TO_VALUE[formState.sort] ?? 'prospect');
+    sp.set('sort', SORT_LABEL_TO_VALUE[formState.sort] ?? 'attractiveness');
 
     router.push(`/rare-models?${sp.toString()}`);
     setOpen(false);

@@ -15,7 +15,7 @@ export default async function RegionPage({ params }: { params: { regionId: strin
   try {
     [region, regionGroups] = await Promise.all([
       api.region(id),
-      api.search({ region: id, sort: 'prospect' }),
+      api.search({ region: id, sort: 'attractiveness' }),
     ]);
   } catch {
     notFound();

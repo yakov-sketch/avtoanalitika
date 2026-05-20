@@ -4,10 +4,10 @@ import { RegionsGridCollapsible } from '@/components/regions-grid';
 import { AnalyticsSection } from '@/components/analytics-section';
 import {
   DashboardTopBar,
-  InsightsCards,
   KpiGrid,
   PlatformsGrid,
 } from '@/components/dashboard-parts';
+import { MetricsGlossary } from '@/components/metrics-glossary';
 import { api } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ export default async function HomePage() {
     api.regions(),
     api.metadata(),
     // Полный набор групп без premium-фильтра — клиент сам отфильтрует
-    api.search({ premiumOnly: false, sort: 'prospect' }),
+    api.search({ premiumOnly: false, sort: 'attractiveness' }),
   ]);
 
   return (
@@ -67,8 +67,8 @@ export default async function HomePage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="font-heading text-2xl font-semibold">Что значат метрики и как читать рекомендации</h2>
-          <InsightsCards />
+          <h2 className="font-heading text-2xl font-semibold">Что значат метрики и типы возможностей</h2>
+          <MetricsGlossary />
         </section>
       </main>
     </div>

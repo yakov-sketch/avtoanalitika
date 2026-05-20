@@ -5,6 +5,7 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
+    "startCommand": "npx next start -p $PORT",
     "restartPolicyType": "ON_FAILURE"
   }
 }

@@ -18,13 +18,62 @@ _AGG = "STRING_AGG(DISTINCT {col}, ',')" if IS_POSTGRES else "GROUP_CONCAT(DISTI
 CAPITAL_REGIONS = ("Москва", "Санкт-Петербург")
 
 
+def _group_key(mark, model, generation, configuration) -> str:
+    return "|".join([mark or "", model or "", generation or "", configuration or ""])
+
+
 def _group_id(mark: str, model: str, generation: str | None, configuration: str | None) -> str:
-    key = "|".join([mark or "", model or "", generation or "", configuration or ""])
-    return hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha1(_group_key(mark, model, generation, configuration).encode("utf-8")).hexdigest()[:16]
 
 
-def _enrich_group(g: dict[str, Any]) -> dict[str, Any]:
+def get_model_totals_map() -> dict[str, int]:
+    """{mark|model: всего объявлений по модели} — масштаб модели в целом,
+    независимо от дробления на поколения/конфигурации. Нужно классификатору,
+    чтобы отличать массовую модель от нишевой."""
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            """
+            SELECT mark, model, COUNT(*) AS n
+            FROM listings
+            WHERE mark IS NOT NULL AND model IS NOT NULL
+            GROUP BY mark, model
+            """
+        ).fetchall()
+        return {f"{r['mark']}|{r['model']}": int(r["n"]) for r in rows}
+    finally:
+        conn.close()
+
+
+def get_regional_prices_map() -> dict[str, list]:
+    """{group_key: [(region, avg_price, count), ...]} — для расчёта арбитража."""
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            """
+            SELECT mark, model, generation, configuration, region,
+                   AVG(price_rub) AS avg_price, COUNT(*) AS n
+            FROM listings
+            WHERE status='active' AND price_rub > 0 AND region IS NOT NULL
+              AND mark IS NOT NULL AND model IS NOT NULL
+            GROUP BY mark, model, generation, configuration, region
+            """
+        ).fetchall()
+        result: dict[str, list] = {}
+        for r in rows:
+            key = _group_key(r["mark"], r["model"], r["generation"], r["configuration"])
+            result.setdefault(key, []).append(
+                (r["region"], float(r["avg_price"] or 0), int(r["n"]))
+            )
+        return result
+    finally:
+        conn.close()
+
+
+def _enrich_group(g: dict[str, Any], regional: dict[str, list] | None = None,
+                  model_totals: dict[str, int] | None = None) -> dict[str, Any]:
     g = dict(g)
+    g["model_total"] = (model_totals or {}).get(f"{g.get('mark')}|{g.get('model')}", 0)
     g["regions_present"] = [r for r in (g.get("regions_present_csv") or "").split(",") if r]
     g["platforms"] = [p for p in (g.get("platforms_csv") or "").split(",") if p]
     g["sections"] = [s for s in (g.get("sections_csv") or "").split(",") if s]
@@ -41,11 +90,15 @@ def _enrich_group(g: dict[str, Any]) -> dict[str, Any]:
     g["full_name"] = " ".join(
         x for x in [g.get("mark"), g.get("model"), g.get("generation"), g.get("configuration")] if x
     )
+    gkey = _group_key(g["mark"], g["model"], g.get("generation"), g.get("configuration"))
+    g["regional_prices"] = (regional or {}).get(gkey, [])
     g["scores"] = all_scores(g)
-    g["prospect_score"] = g["scores"]["prospect"]["value"]
+    g["attractiveness_score"] = g["scores"]["attractiveness"]["value"]
     g["deficit_score"] = g["scores"]["deficit"]["value"]
     g["liquidity_score"] = g["scores"]["liquidity"]["value"]
     g["demand_score"] = g["scores"]["demand"]["value"]
+    g["turnover_score"] = g["scores"]["turnover"]["value"]
+    g["opportunity_key"] = g["scores"]["opportunity"]["key"]
     g["districts_present"] = sorted({
         d for r in g["regions_present"] if (d := district_of(r)) is not None
     })
@@ -87,13 +140,15 @@ def _agg_query(where_sql: str = "", params: tuple = ()) -> str:
 
 
 def get_groups(limit: int | None = None) -> list[dict[str, Any]]:
+    regional = get_regional_prices_map()
+    model_totals = get_model_totals_map()
     conn = get_conn()
     try:
         sql = _agg_query("WHERE mark IS NOT NULL AND model IS NOT NULL")
         if limit:
             sql += f"\nLIMIT {int(limit)}"
         rows = conn.execute(sql).fetchall()
-        return [_enrich_group(dict(r)) for r in rows]
+        return [_enrich_group(dict(r), regional, model_totals) for r in rows]
     finally:
         conn.close()
 

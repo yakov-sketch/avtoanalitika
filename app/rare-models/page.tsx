@@ -1,7 +1,8 @@
 import { Sparkles } from 'lucide-react';
 import { Header } from '@/components/header';
 import { BackButton } from '@/components/back-button';
-import { InsightsCards, RareModelsBanner } from '@/components/dashboard-parts';
+import { RareModelsBanner } from '@/components/dashboard-parts';
+import { MetricsGlossary } from '@/components/metrics-glossary';
 import { RareCarsTable } from '@/components/rare-cars-table';
 import { api, type SearchFilters } from '@/lib/api';
 
@@ -35,7 +36,7 @@ export default async function RareModelsPage({
 
         <RareModelsBanner totalGroups={response.total} activeListings={response.items.reduce((s, g) => s + g.activeCount, 0)} />
         <RareCarsTable cars={response.items} pageSize={30} />
-        <InsightsCards />
+        <MetricsGlossary />
       </main>
     </div>
   );
@@ -73,6 +74,6 @@ function parseFilters(sp: Record<string, string | string[] | undefined>): Search
     // чтобы выборка ?brand=Kia не была пустой.
     premiumOnly:
       pick('premiumOnly') === '0' ? false : pick('premiumOnly') === '1' ? true : !pick('brand'),
-    sort: (pick('sort') as SearchFilters['sort']) ?? 'prospect',
+    sort: (pick('sort') as SearchFilters['sort']) ?? 'attractiveness',
   };
 }

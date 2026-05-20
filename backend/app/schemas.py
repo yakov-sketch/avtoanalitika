@@ -17,18 +17,35 @@ class ScoreComponent(CamelModel):
 
 
 class Score(CamelModel):
+    key: str
     name: str
     value: int = Field(ge=0, le=100)
+    grade: str
+    color: str
+    available: bool = True
     formula: str
     components: list[ScoreComponent]
     interpretation: str
 
 
+class OpportunityType(CamelModel):
+    key: str
+    title: str
+    description: str
+
+
 class ScoresBundle(CamelModel):
     deficit: Score
     liquidity: Score
+    turnover: Score
+    capacity: Score
+    price_spread: Score
+    arbitrage: Score
+    velocity: Score
+    trend: Score
     demand: Score
-    prospect: Score
+    attractiveness: Score
+    opportunity: OpportunityType
 
 
 class CarGroup(CamelModel):
@@ -225,3 +242,15 @@ class UniversalSearchResponse(CamelModel):
     regions: list[str]
     platforms: list[str]
     brands: list[str]
+
+
+class MetricDefinition(CamelModel):
+    key: str
+    title: str
+    short: str
+    full: str
+
+
+class GlossaryResponse(CamelModel):
+    metrics: list[MetricDefinition]
+    opportunity_types: list[OpportunityType]

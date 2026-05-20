@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { Header } from '@/components/header';
 import { BackButton } from '@/components/back-button';
 import { RegionCards } from '@/components/dashboard-parts';
-import { ScoresPanel } from '@/components/scores-panel';
 import { ModelDetail } from '@/components/model-detail';
 import { PipelineButton } from '@/components/pipeline-button';
 import { api, formatRubles } from '@/lib/api';
@@ -60,14 +59,6 @@ export default async function ModelDetailsPage({ params }: { params: { modelId: 
             </div>
           </div>
         </div>
-
-        <section>
-          <h2 className="mb-4 font-heading text-2xl font-semibold">Оценки и формулы по всей группе</h2>
-          <p className="mb-3 text-sm text-muted">
-            Scores считаются по всей группе целиком, чтобы видеть рыночную картину. Срез ниже не меняет эти оценки.
-          </p>
-          <ScoresPanel scores={group.scores} />
-        </section>
 
         <ModelDetail group={group} listings={listings} />
 

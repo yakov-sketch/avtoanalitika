@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { BackButton } from '@/components/back-button';
-import { ScoreBadge } from '@/components/badges';
+import { ScoreBadge, OpportunityBadge } from '@/components/badges';
 import { api, formatRubles, type CarGroup } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -67,10 +67,16 @@ function CompareTable({ groups }: { groups: CarGroup[] }) {
     { label: 'Цена min', render: (g) => formatRubles(g.minPrice) },
     { label: 'Цена средняя', render: (g) => formatRubles(g.avgPrice) },
     { label: 'Цена max', render: (g) => formatRubles(g.maxPrice) },
-    { label: 'Дефицит', render: (g) => <ScoreBadge value={g.scores.deficit.value} /> },
-    { label: 'Ликвидность', render: (g) => <ScoreBadge value={g.scores.liquidity.value} /> },
-    { label: 'Спрос', render: (g) => <ScoreBadge value={g.scores.demand.value} /> },
-    { label: 'Перспективность', render: (g) => <ScoreBadge value={g.scores.prospect.value} /> },
+    { label: 'Тип возможности', render: (g) => (
+        <OpportunityBadge titleKey={g.scores.opportunity.key} title={g.scores.opportunity.title} />
+    ) },
+    { label: 'Дефицит', render: (g) => <ScoreBadge score={g.scores.deficit} /> },
+    { label: 'Ликвидность', render: (g) => <ScoreBadge score={g.scores.liquidity} /> },
+    { label: 'Оборот', render: (g) => <ScoreBadge score={g.scores.turnover} /> },
+    { label: 'Ценовой спред', render: (g) => <ScoreBadge score={g.scores.priceSpread} /> },
+    { label: 'Арбитраж', render: (g) => <ScoreBadge score={g.scores.arbitrage} /> },
+    { label: 'Спрос', render: (g) => <ScoreBadge score={g.scores.demand} /> },
+    { label: 'Привлекательность', render: (g) => <ScoreBadge score={g.scores.attractiveness} /> },
     { label: 'Платформы', render: (g) => g.platforms.join(', ') },
     { label: 'Регионы', render: (g) => g.regionsPresent.slice(0, 5).join(', ') + (g.regionsPresent.length > 5 ? '…' : '') },
   ];

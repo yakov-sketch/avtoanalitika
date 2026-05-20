@@ -17,6 +17,7 @@ from .db import get_conn, init_schema
 from .seed import seed_if_empty
 from .schemas import (
     CarGroup,
+    GlossaryResponse,
     Listing,
     OverviewResponse,
     PipelineItem,
@@ -28,6 +29,7 @@ from .schemas import (
     SearchResponse,
     UniversalSearchResponse,
 )
+from .scoring import METRIC_DEFINITIONS, OPPORTUNITY_TYPES
 
 app = FastAPI(
     title="Rovena Analytics API",
@@ -131,7 +133,7 @@ def rare_models(
     listings_to: int | None = Query(default=None, ge=0),
     rare_only: bool = False,
     premium_only: bool = False,
-    sort: str = Query(default="prospect", pattern="^(prospect|deficit|liquidity|demand|price_asc|price_desc)$"),
+    sort: str = Query(default="attractiveness", pattern="^(attractiveness|deficit|liquidity|demand|turnover|price_asc|price_desc)$"),
 ) -> SearchResponse:
     filters = SearchFilters(
         platform=platform, brand=brand, model=model, body_type=body_type,
@@ -193,3 +195,11 @@ def region_one(region_id: str) -> RegionAnalytics:
 @app.get("/api/v1/search-metadata", response_model=SearchMetadata)
 def search_metadata() -> SearchMetadata:
     return SearchMetadata(**services.metadata())
+
+
+@app.get("/api/v1/glossary", response_model=GlossaryResponse)
+def glossary() -> GlossaryResponse:
+    metrics = [{"key": k, **v} for k, v in METRIC_DEFINITIONS.items()]
+    opps = [{"key": k, "title": v["title"], "description": v["desc"]}
+            for k, v in OPPORTUNITY_TYPES.items()]
+    return GlossaryResponse(metrics=metrics, opportunity_types=opps)

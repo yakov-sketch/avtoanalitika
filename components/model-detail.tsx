@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Filter, RotateCcw } from 'lucide-react';
 import { BrandCombobox } from '@/components/brand-combobox';
 import { ListingsTable } from '@/components/listings-row';
+import { ScoresPanel } from '@/components/scores-panel';
 import { PriceHistogram, PriceVsYearChart } from '@/components/price-charts';
 import { formatInt, formatRubles, type CarGroup, type Listing } from '@/lib/api';
 
@@ -296,6 +297,15 @@ export function ModelDetail({ group, listings }: { group: CarGroup; listings: Li
             )}
           </div>
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-1 font-heading text-2xl font-semibold">Аналитика модели</h2>
+        <p className="mb-4 text-sm text-muted">
+          Тип возможности, итоговая привлекательность к завозу и 9 метрик. Считаются
+          по всей группе целиком. У каждой метрики можно раскрыть «Как посчитано».
+        </p>
+        <ScoresPanel scores={group.scores} />
       </section>
 
       <section className="card overflow-hidden">

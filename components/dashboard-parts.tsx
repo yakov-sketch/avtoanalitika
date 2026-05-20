@@ -159,32 +159,6 @@ export function RareModelsBanner({ totalGroups, activeListings }: { totalGroups:
   );
 }
 
-export function InsightsCards() {
-  return (
-    <div className="grid grid-cols-1 gap-3 sm:gap-5 lg:grid-cols-2">
-      <div className="card p-6">
-        <div className="font-heading text-2xl font-semibold">Что значат метрики</div>
-        <ul className="mt-4 space-y-3 text-sm leading-6 text-muted">
-          <li><strong className="text-foreground">Дефицит</strong> — оценка того, насколько мало предложений (объявлений, продавцов, регионов) у группы.</li>
-          <li><strong className="text-foreground">Ликвидность</strong> — доля снятых объявлений среди всех. Чем выше — тем быстрее модель уходит с рынка.</li>
-          <li><strong className="text-foreground">Спрос</strong> — производная: 0.4·Дефицит + 0.6·Ликвидность.</li>
-          <li><strong className="text-foreground">Перспективность</strong> — итоговая 0.35·Дефицит + 0.3·Ликвидность + 0.35·Спрос (+5 за премиум).</li>
-        </ul>
-      </div>
-      <div className="card p-6">
-        <div className="font-heading text-2xl font-semibold">Как читать рекомендации</div>
-        <ul className="mt-4 space-y-3 text-sm leading-6 text-muted">
-          <li>≥ 75 баллов — сильная возможность, фокус на завоз/закупку</li>
-          <li>50–74 — заслуживает внимания, изучить детали</li>
-          <li>25–49 — слабая возможность</li>
-          <li>&lt; 25 — не интересно</li>
-          <li className="text-foreground">В карточке модели раскрой блок «Как посчитано» — там полная разбивка формулы.</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
 export function RegionCards({
   present,
   missing,
